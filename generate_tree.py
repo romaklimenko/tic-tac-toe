@@ -92,9 +92,9 @@ def save_json(data: Dict, filename: str, minimize: bool = False):
 tree = generate_tic_tac_toe_tree()
 
 # Save formatted JSON
-save_json(tree, 'tic-tac-toe.json')
+save_json(tree, './data/tic-tac-toe.json')
 
 # Save minimized JSON
-save_json(tree, 'tic-tac-toe.min.json', minimize=True)
+save_json(tree, './data/tic-tac-toe.min.json', minimize=True)
 
 print("Tic-tac-toe tree generated and saved to JSON files.")
