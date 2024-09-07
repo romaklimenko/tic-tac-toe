@@ -3,6 +3,14 @@
 import json
 from typing import Dict, List
 
+BOARD = 'b'
+WINNER = 'w'
+CHILDREN = 'c'
+STATS = 's'
+X_WINS = 'x'
+O_WINS = 'o'
+DRAWS = 'd'
+
 
 def create_board() -> List[str]:
     return [' ' for _ in range(9)]
@@ -38,32 +46,32 @@ def generate_tree(board: List[str], player: str) -> Dict:
     winner = get_winner(board)
     if winner:
         return {
-            'board': board,
-            'winner': winner,
-            'children': [],
-            'stats': {
-                'X_wins': 1 if winner == 'X' else 0, 'O_wins': 1 if winner == 'O' else 0, 'draws': 0
+            BOARD: board,
+            WINNER: winner,
+            CHILDREN: [],
+            STATS: {
+                X_WINS: 1 if winner == 'X' else 0, O_WINS: 1 if winner == 'O' else 0, DRAWS: 0
             }
         }
 
     if is_board_full(board):
         return {
-            'board': board,
-            'winner': '',
-            'children': [],
-            'stats': {'X_wins': 0, 'O_wins': 0, 'draws': 1}
+            BOARD: board,
+            WINNER: '',
+            CHILDREN: [],
+            STATS: {X_WINS: 0, O_WINS: 0, DRAWS: 1}
         }
 
-    node = {'board': board, 'winner': '', 'children': [],
-            'stats': {'X_wins': 0, 'O_wins': 0, 'draws': 0}}
+    node = {BOARD: board, WINNER: '', CHILDREN: [],
+            STATS: {X_WINS: 0, O_WINS: 0, DRAWS: 0}}
 
     for position in get_empty_positions(board):
         new_board = make_move(board, position, player)
         child = generate_tree(new_board, 'O' if player == 'X' else 'X')
-        node['children'].append(child)
-        node['stats']['X_wins'] += child['stats']['X_wins']
-        node['stats']['O_wins'] += child['stats']['O_wins']
-        node['stats']['draws'] += child['stats']['draws']
+        node[CHILDREN].append(child)
+        node[STATS][X_WINS] += child[STATS][X_WINS]
+        node[STATS][O_WINS] += child[STATS][O_WINS]
+        node[STATS][DRAWS] += child[STATS][DRAWS]
 
     return node
 
