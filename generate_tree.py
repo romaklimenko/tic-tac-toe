@@ -1,13 +1,18 @@
+# pylint: disable=missing-module-docstring disable=missing-function-docstring
+
 import json
-from typing import List, Dict, Tuple
+from typing import Dict, List
+
 
 def create_board() -> List[str]:
     return [' ' for _ in range(9)]
+
 
 def make_move(board: List[str], position: int, player: str) -> List[str]:
     new_board = board.copy()
     new_board[position] = player
     return new_board
+
 
 def get_winner(board: List[str]) -> str:
     winning_combinations = [
@@ -20,11 +25,14 @@ def get_winner(board: List[str]) -> str:
             return board[combo[0]]
     return ''
 
+
 def is_board_full(board: List[str]) -> bool:
     return ' ' not in board
 
+
 def get_empty_positions(board: List[str]) -> List[int]:
     return [i for i, cell in enumerate(board) if cell == ' ']
+
 
 def generate_tree(board: List[str], player: str) -> Dict:
     winner = get_winner(board)
@@ -33,9 +41,11 @@ def generate_tree(board: List[str], player: str) -> Dict:
             'board': board,
             'winner': winner,
             'children': [],
-            'stats': {'X_wins': 1 if winner == 'X' else 0, 'O_wins': 1 if winner == 'O' else 0, 'draws': 0}
+            'stats': {
+                'X_wins': 1 if winner == 'X' else 0, 'O_wins': 1 if winner == 'O' else 0, 'draws': 0
+            }
         }
-    
+
     if is_board_full(board):
         return {
             'board': board,
@@ -43,9 +53,10 @@ def generate_tree(board: List[str], player: str) -> Dict:
             'children': [],
             'stats': {'X_wins': 0, 'O_wins': 0, 'draws': 1}
         }
-    
-    node = {'board': board, 'winner': '', 'children': [], 'stats': {'X_wins': 0, 'O_wins': 0, 'draws': 0}}
-    
+
+    node = {'board': board, 'winner': '', 'children': [],
+            'stats': {'X_wins': 0, 'O_wins': 0, 'draws': 0}}
+
     for position in get_empty_positions(board):
         new_board = make_move(board, position, player)
         child = generate_tree(new_board, 'O' if player == 'X' else 'X')
@@ -53,26 +64,29 @@ def generate_tree(board: List[str], player: str) -> Dict:
         node['stats']['X_wins'] += child['stats']['X_wins']
         node['stats']['O_wins'] += child['stats']['O_wins']
         node['stats']['draws'] += child['stats']['draws']
-    
+
     return node
+
 
 def generate_tic_tac_toe_tree() -> Dict:
     return generate_tree(create_board(), 'X')
 
+
 def save_json(data: Dict, filename: str, minimize: bool = False):
-    with open(filename, 'w') as f:
+    with open(filename, 'w', encoding='utf-8') as f:
         if minimize:
             json.dump(data, f, separators=(',', ':'))
         else:
             json.dump(data, f, indent=2)
 
+
 # Generate the tree
 tree = generate_tic_tac_toe_tree()
 
 # Save formatted JSON
-save_json(tree, 'tic_tac_toe_tree.json')
+save_json(tree, 'tic-tac-toe.json')
 
 # Save minimized JSON
-save_json(tree, 'tic_tac_toe_tree_min.json', minimize=True)
+save_json(tree, 'tic-tac-toe.min.json', minimize=True)
 
 print("Tic-tac-toe tree generated and saved to JSON files.")
