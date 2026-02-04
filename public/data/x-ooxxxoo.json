@@ -1,0 +1,1 @@
+{"board":"x-ooxxxoo","turn":"x","x":0,"o":0,"draw":1,"isTerminal":false,"winner":null,"moves":{"1":{"x":0,"o":0,"draw":1,"isTerminal":true,"winner":"draw","score":0}}}
