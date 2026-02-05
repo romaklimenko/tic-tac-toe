@@ -1,0 +1,1 @@
+{"board":"-ox-xo--x","turn":"o","x":14,"o":0,"draw":4,"isTerminal":false,"winner":null,"moves":{"0":{"x":3,"o":0,"draw":2,"isTerminal":false,"winner":null,"score":9},"3":{"x":4,"o":0,"draw":0,"isTerminal":false,"winner":null,"score":9},"6":{"x":3,"o":0,"draw":2,"isTerminal":false,"winner":null,"score":9},"7":{"x":4,"o":0,"draw":0,"isTerminal":false,"winner":null,"score":9}}}
