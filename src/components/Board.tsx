@@ -10,7 +10,7 @@ interface BoardProps {
 
 export function Board({ board, data, onPlay, turn }: BoardProps) {
     return (
-        <div className="grid grid-cols-3 gap-1 bg-gray-300 p-1 rounded-lg">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 bg-white/10 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 w-full max-w-[min(100%,calc(100vh-20rem))] aspect-square">
             {board.split('').map((cell, index) => (
                 <Cell
                     key={index}

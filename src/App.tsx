@@ -5,7 +5,7 @@ import { useGameState } from './hooks/useGameState';
 
 function App() {
   const [board, setBoard] = useState('---------');
-  const [mode, setMode] = useState<'PvP' | 'PvAI'>('PvAI'); // Default to AI mode
+  const [mode, setMode] = useState<'PvP' | 'PvAI'>('PvAI');
   const [turn, setTurn] = useState<Player>('x');
   const { data, loading } = useGameState(board);
 
@@ -31,39 +31,12 @@ function App() {
   // AI Logic
   useEffect(() => {
     if (mode === 'PvAI' && turn === 'o' && data && !data.isTerminal && !loading) {
-      // Simple timeout for realism
       const timer = setTimeout(() => {
         let bestMove = -1;
-
-        // Find best move based on score
-        // data.moves is Record<string, MoveStats>
-        // Check all available moves
         const availableMoves = Object.entries(data.moves);
-
-        // If optimal play: choose max score (for O, we want to minimize if score was global, 
-        // but let's check how we stored score in generator.
-        // Generator: win='x' -> 10-depth. win='o' -> -10+depth.
-        // If turn is 'o', 'o' is minimizing player in standard minimax if score is always from X perspective.
-        // My generator: 
-        //   isMaximizing = turn === 'x';
-        //   return bestScore;
-        // So the returned score for a state is ALWAYS relative to the maximizer of that subtree?
-        // Wait, minimax function: 
-        //   if winner='x' return 10. if winner='o' return -10.
-        //   So Positive = X wins. Negative = O wins.
-        // So O should minimize the score.
-
-        // However, I stored `score` in `moves[i]` by calling `getMinimax(nextBoard, nextTurn)`.
-        // `getMinimax` returns the value of the board state.
-        // If nextBoard is advantageous for O, score should be negative.
-        // So O should pick the move with the LOWEST score.
-
         let bestVal = Infinity; // O minimizes
 
         availableMoves.forEach(([idx, moveStat]) => {
-          // We need the raw score. 
-          // In generate-data: enhancedMoves[idx] = { ...childStats, score: score }
-          // So moveStat.score is the minimax value of the RESULTING state.
           if (typeof moveStat.score === 'number') {
             if (moveStat.score < bestVal) {
               bestVal = moveStat.score;
@@ -75,9 +48,6 @@ function App() {
         if (bestMove !== -1) {
           playMove(bestMove);
         } else {
-          // Fallback if no score (shouldn't happen) or random if equal
-          // Pick random from best moves?
-          // Ideally we filter moves with score === bestVal
           const bestMoves = availableMoves
             .filter(([, s]) => s.score === bestVal)
             .map(([i]) => parseInt(i));
@@ -93,52 +63,89 @@ function App() {
   }, [mode, turn, data, loading, playMove]);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 font-sans text-gray-800">
-      <h1 className="text-4xl font-bold mb-8 text-blue-600">Tic Tac Toe Probability</h1>
+    <div className="h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex flex-col items-center justify-center p-4 md:p-8 font-sans text-white overflow-hidden">
+      <div className="w-full h-full flex flex-col items-center gap-2 max-w-2xl">
 
-      <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md">
-        <div className="flex justify-between mb-6">
-          <div className="text-lg font-semibold">
-            Mode:
-            <select
-              value={mode}
-              onChange={(e) => handleModeChange(e.target.value as 'PvP' | 'PvAI')}
-              className="ml-2 border border-gray-300 rounded p-1 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="PvAI">Player vs AI</option>
-              <option value="PvP">Player vs Player</option>
-            </select>
+        {/* Game Container */}
+        <div className="bg-white/5 p-3 sm:p-4 md:p-6 rounded-2xl shadow-xl backdrop-blur-xl border border-white/10 w-full flex flex-col items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-h-0">
+
+          {/* Controls */}
+          <div className="flex flex-col sm:flex-row w-full justify-between items-center gap-2 pb-2 flex-shrink-0">
+            <div className="flex items-center gap-3 bg-black/20 p-1.5 rounded-xl">
+              <button
+                onClick={() => handleModeChange('PvAI')}
+                className={`px-4 py-2 rounded-lg transition-all duration-300 font-medium ${mode === 'PvAI' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+              >
+                Vs AI
+              </button>
+              <button
+                onClick={() => handleModeChange('PvP')}
+                className={`px-4 py-2 rounded-lg transition-all duration-300 font-medium ${mode === 'PvP' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+              >
+                PvP
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-400 font-mono bg-black/30 px-3 py-1.5 rounded-lg border border-white/5">
+                TURN: <span className={turn === 'x' ? 'text-blue-400' : 'text-rose-400'}>{turn.toUpperCase()}</span>
+              </div>
+            </div>
           </div>
+
+          {/* Board */}
+          <div className="relative flex-1 w-full flex items-center justify-center min-h-0">
+            <Board board={board} data={data} onPlay={playMove} turn={turn} />
+
+            {data?.isTerminal && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-2xl animate-fade-in">
+                <div className="bg-white text-gray-900 px-8 py-4 rounded-2xl shadow-2xl transform scale-110 flex flex-col items-center gap-2">
+                  <span className="text-2xl font-bold">
+                    {data.winner === 'draw' ? "It's a Draw!" : `Player ${data.winner?.toUpperCase()} Wins!`}
+                  </span>
+                  <button
+                    onClick={resetGame}
+                    className="mt-2 bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition"
+                  >
+                    Play Again
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer / Stats */}
+          <div className="w-full text-center space-y-2 pt-2 sm:pt-3 md:pt-4 flex-shrink-0">
+            <div className="text-sm text-gray-400">
+              Hover over valid moves to see win probabilities
+            </div>
+            <div className="flex justify-center gap-6 text-xs font-mono uppercase tracking-widest text-gray-500">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-green-500/50"></span> Win
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-yellow-500/50"></span> Draw
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500/50"></span> Lose
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Reset (Bottom) */}
+        {!data?.isTerminal && (
           <button
             onClick={resetGame}
-            className="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded transition-colors"
+            className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-wider flex items-center gap-2 hover:bg-white/5 px-4 py-2 rounded-lg"
           >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
             Reset Game
           </button>
-        </div>
-
-        <div className="flex justify-center mb-6">
-          <Board board={board} data={data} onPlay={playMove} turn={turn} />
-        </div>
-
-        <div className="text-center h-8">
-          {loading ? (
-            <span className="text-gray-400">Loading probabilities...</span>
-          ) : data?.isTerminal ? (
-            <span className="text-xl font-bold">
-              {data.winner === 'draw' ? "It's a Draw!" : `Player ${data.winner?.toUpperCase()} Wins!`}
-            </span>
-          ) : (
-            <span className="text-gray-600">
-              Current Turn: <span className="font-bold">{turn.toUpperCase()}</span>
-            </span>
-          )}
-        </div>
-
-        <div className="mt-8 text-xs text-gray-500 text-center">
-          <p>Hover over empty cells to see Win/Loss/Draw counts.</p>
-          <p>Colors indicate outcome probability from current player's perspective.</p>
-        </div>
+        )}
       </div>
     </div>
   );
